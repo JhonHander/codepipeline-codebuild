@@ -21,5 +21,5 @@ variable "github_token" {
 }
 
 variable "aws_account_id" {
-    description = "The AWS account ID"
+  description = "The AWS account ID"
 }
