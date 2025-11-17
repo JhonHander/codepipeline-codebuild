@@ -24,7 +24,6 @@ El pipeline incluye las siguientes etapas:
 2. **AWS CLI** instalado y configurado
 3. **Terraform** instalado (versión 1.0 o superior)
 4. **Repositorio de GitHub** para el código fuente
-5. **Token de GitHub** con permisos de `repo` y `admin:repo_hook`
 
 ## Configuración
 
@@ -42,14 +41,7 @@ git branch -M main
 git push -u origin main
 ```
 
-### 2. Obtener Token de GitHub
-
-1. Ve a GitHub > Settings > Developer settings > Personal access tokens
-2. Genera un nuevo token (classic)
-3. Selecciona los scopes: `repo` y `admin:repo_hook`
-4. Copia el token generado
-
-### 3. Configurar Variables de Terraform
+### 2. Configurar Variables de Terraform
 
 ```bash
 cd terraform
@@ -59,15 +51,15 @@ cp terraform.tfvars.example terraform.tfvars
 Edita `terraform.tfvars` con tus valores:
 
 ```terraform
-aws_region     = "us-east-1"
-github_owner   = "tu-usuario"
-github_repo    = "tu-repositorio"
-github_branch  = "main"
-github_token   = "ghp_tu_token_aqui"
-aws_account_id = "123456789012"
+aws_region           = "us-east-1"
+github_repository_id = "tu-usuario/tu-repositorio"  # Formato: owner/repo
+github_branch        = "main"
+aws_account_id       = "123456789012"
 ```
 
-### 4. Configurar AWS CLI
+**Nota:** Ya no necesitas un token de GitHub. La conexión se maneja automáticamente a través de AWS CodeStar Connections.
+
+### 3. Configurar AWS CLI
 
 ```bash
 aws configure
@@ -77,7 +69,7 @@ aws configure
 # Ingresa el formato de salida (ej: json)
 ```
 
-### 5. Desplegar la Infraestructura
+### 4. Desplegar la Infraestructura
 
 ```bash
 cd terraform
@@ -93,6 +85,16 @@ terraform apply
 ```
 
 Terraform te mostrará todos los recursos que va a crear. Escribe `yes` para confirmar.
+
+### 5. Autorizar la Conexión de GitHub
+
+Después de ejecutar `terraform apply`, tendrás que autorizar la conexión de AWS en GitHub:
+
+1. Ve a la consola de AWS > **CodePipeline** > **Connections**
+2. Busca la conexión `github-connection` con estado **PENDING**
+3. Haz clic en **Update pending connection**
+4. Haz clic en **Connect to GitHub** e instala la aplicación de AWS CodePipeline en tu cuenta de GitHub
+5. Una vez autorizada, el estado cambiará a **AVAILABLE**
 
 ## Uso del Pipeline
 

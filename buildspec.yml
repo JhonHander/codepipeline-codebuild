@@ -23,8 +23,10 @@ phases:
       - echo "Subiendo la imagen de Docker a Amazon ECR..."
       - docker push $REPOSITORY_URI_TEST:latest
       - docker push $REPOSITORY_URI_PROD:latest
-      - echo "Escribiendo la definición de la imagen en el archivo imagedefinitions.json..."
-      - printf '[{"name":"test-container","imageUri":"%s"}]' $REPOSITORY_URI_TEST:latest > imagedefinitions.json
-      - printf '[{"name":"prod-container","imageUri":"%s"}]' $REPOSITORY_URI_PROD:latest >> imagedefinitions.json
+      - echo "Escribiendo las definiciones de imagen..."
+      - printf '[{"name":"test-container","imageUri":"%s"}]' $REPOSITORY_URI_TEST:latest > imagedefinitions-test.json
+      - printf '[{"name":"prod-container","imageUri":"%s"}]' $REPOSITORY_URI_PROD:latest > imagedefinitions-prod.json
 artifacts:
-  files: imagedefinitions.json
+  files:
+    - imagedefinitions-test.json
+    - imagedefinitions-prod.json
