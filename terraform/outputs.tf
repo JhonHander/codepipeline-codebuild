@@ -27,3 +27,8 @@ output "ecs_cluster_name" {
   description = "Nombre del clúster de ECS"
   value       = aws_ecs_cluster.main.name
 }
+
+output "github_webhook_url" {
+  description = "URL del webhook para configurar en GitHub"
+  value       = aws_codepipeline_webhook.github.url
+}
