@@ -32,7 +32,7 @@ resource "aws_ecs_task_definition" "test_app" {
       portMappings = [
         {
           containerPort = 80
-          hostPort      = 80
+          protocol      = "tcp"
         }
       ]
     }
@@ -57,7 +57,7 @@ resource "aws_ecs_task_definition" "prod_app" {
       portMappings = [
         {
           containerPort = 80
-          hostPort      = 80
+          protocol      = "tcp"
         }
       ]
     }
@@ -151,8 +151,9 @@ resource "aws_ecs_service" "test_app" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = [aws_default_subnet.default_a.id, aws_default_subnet.default_b.id]
-    security_groups = [aws_security_group.ecs_service.id]
+    subnets          = [aws_default_subnet.default_a.id, aws_default_subnet.default_b.id]
+    security_groups  = [aws_security_group.ecs_service.id]
+    assign_public_ip = true
   }
 
   load_balancer {
@@ -199,8 +200,9 @@ resource "aws_ecs_service" "prod_app" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = [aws_default_subnet.default_a.id, aws_default_subnet.default_b.id]
-    security_groups = [aws_security_group.ecs_service.id]
+    subnets          = [aws_default_subnet.default_a.id, aws_default_subnet.default_b.id]
+    security_groups  = [aws_security_group.ecs_service.id]
+    assign_public_ip = true
   }
 
   load_balancer {
