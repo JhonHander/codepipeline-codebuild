@@ -328,6 +328,22 @@ resource "aws_codepipeline" "pipeline" {
   }
 }
 
+resource "aws_codepipeline_webhook" "github" {
+  name            = "github-webhook"
+  authentication  = "GITHUB_HMAC"
+  target_action   = "Source"
+  target_pipeline = aws_codepipeline.pipeline.name
+
+  filter {
+    json_path    = "$.ref"
+    match_equals = "refs/heads/${var.github_branch}"
+  }
+
+  authentication_configuration {
+    secret_token = random_password.webhook_secret.result
+  }
+}
+
 resource "aws_s3_bucket" "codepipeline_bucket" {
   bucket = "app-pipeline-bucket-${random_id.id.hex}"
 }
@@ -341,6 +357,11 @@ resource "aws_s3_bucket_versioning" "codepipeline_bucket_versioning" {
 
 resource "random_id" "id" {
   byte_length = 8
+}
+
+resource "random_password" "webhook_secret" {
+  length  = 32
+  special = true
 }
 
 resource "aws_codebuild_project" "app_build" {
