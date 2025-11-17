@@ -212,6 +212,11 @@ resource "aws_ecs_service" "prod_app" {
   depends_on = [aws_lb_listener.prod]
 }
 
+resource "aws_codestarconnections_connection" "github" {
+  name          = "github-connection"
+  provider_type = "GitHub"
+}
+
 resource "aws_codepipeline" "pipeline" {
   name     = "app-pipeline"
   role_arn = aws_iam_role.codepipeline_role.arn
@@ -227,16 +232,15 @@ resource "aws_codepipeline" "pipeline" {
     action {
       name             = "Source"
       category         = "Source"
-      owner            = "ThirdParty"
-      provider         = "GitHub"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
       version          = "1"
       output_artifacts = ["source_output"]
 
       configuration = {
-        Owner      = var.github_owner
-        Repo       = var.github_repo
-        Branch     = var.github_branch
-        OAuthToken = var.github_token
+        ConnectionArn    = aws_codestarconnections_connection.github.arn
+        FullRepositoryId = var.github_repository_id
+        BranchName       = var.github_branch
       }
     }
   }
@@ -278,14 +282,14 @@ resource "aws_codepipeline" "pipeline" {
       name            = "DeployTest"
       category        = "Deploy"
       owner           = "AWS"
-      provider        = "Ecs"
+      provider        = "ECS"
       version         = "1"
       input_artifacts = ["build_output"]
 
       configuration = {
         ClusterName = aws_ecs_cluster.main.name
         ServiceName = aws_ecs_service.test_app.name
-        FileName    = "imagedefinitions.json"
+        FileName    = "imagedefinitions-test.json"
       }
     }
   }
@@ -309,14 +313,14 @@ resource "aws_codepipeline" "pipeline" {
       name            = "DeployProd"
       category        = "Deploy"
       owner           = "AWS"
-      provider        = "Ecs"
+      provider        = "ECS"
       version         = "1"
       input_artifacts = ["build_output"]
 
       configuration = {
         ClusterName = aws_ecs_cluster.main.name
         ServiceName = aws_ecs_service.prod_app.name
-        FileName    = "imagedefinitions.json"
+        FileName    = "imagedefinitions-prod.json"
       }
     }
   }
@@ -326,9 +330,11 @@ resource "aws_s3_bucket" "codepipeline_bucket" {
   bucket = "app-pipeline-bucket-${random_id.id.hex}"
 }
 
-resource "aws_s3_bucket_acl" "codepipeline_bucket_acl" {
+resource "aws_s3_bucket_versioning" "codepipeline_bucket_versioning" {
   bucket = aws_s3_bucket.codepipeline_bucket.id
-  acl    = "private"
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
 resource "random_id" "id" {
