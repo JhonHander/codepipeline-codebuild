@@ -1,0 +1,30 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Iniciando sesión en Amazon ECR..."
+      - aws --version
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - REPOSITORY_URI_TEST=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/test-app
+      - REPOSITORY_URI_PROD=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/prod-app
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+  build:
+    commands:
+      - echo "Construyendo la imagen de Docker..."
+      - docker build -t $REPOSITORY_URI_TEST:$IMAGE_TAG -f app/Dockerfile app
+      - docker build -t $REPOSITORY_URI_PROD:$IMAGE_TAG -f app/Dockerfile app
+      - echo "Etiquetando la imagen de Docker..."
+      - docker tag $REPOSITORY_URI_TEST:$IMAGE_TAG $REPOSITORY_URI_TEST:latest
+      - docker tag $REPOSITORY_URI_PROD:$IMAGE_TAG $REPOSITORY_URI_PROD:latest
+  post_build:
+    commands:
+      - echo "Subiendo la imagen de Docker a Amazon ECR..."
+      - docker push $REPOSITORY_URI_TEST:latest
+      - docker push $REPOSITORY_URI_PROD:latest
+      - echo "Escribiendo la definición de la imagen en el archivo imagedefinitions.json..."
+      - printf '[{"name":"test-container","imageUri":"%s"}]' $REPOSITORY_URI_TEST:latest > imagedefinitions.json
+      - printf '[{"name":"prod-container","imageUri":"%s"}]' $REPOSITORY_URI_PROD:latest >> imagedefinitions.json
+artifacts:
+  files: imagedefinitions.json

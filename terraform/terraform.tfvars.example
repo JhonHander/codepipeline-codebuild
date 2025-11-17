@@ -1,0 +1,8 @@
+# Copia este archivo a terraform.tfvars y rellena con tus valores
+
+aws_region     = "us-east-1"
+github_owner   = "tu-usuario-de-github"
+github_repo    = "nombre-de-tu-repositorio"
+github_branch  = "main"
+github_token   = "ghp_tu_token_de_github_aqui"
+aws_account_id = "123456789012"
